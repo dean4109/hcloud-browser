@@ -205,7 +205,7 @@ class MainActivity : Activity() {
         view.setBackgroundColor(Color.BLACK)
         root.addView(view, FrameLayout.LayoutParams(
           ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
-        setImmersive(true)
+        setFullscreenUi(true)
       }
 
       override fun onHideCustomView() = exitFullscreen()
@@ -239,11 +239,11 @@ class MainActivity : Activity() {
     fullscreenView = null
     fullscreenCallback?.onCustomViewHidden()
     fullscreenCallback = null
-    setImmersive(false)
+    setFullscreenUi(false)
   }
 
   @Suppress("DEPRECATION")
-  private fun setImmersive(on: Boolean) {
+  private fun setFullscreenUi(on: Boolean) {
     window.insetsController?.let { c ->
       if (on) {
         c.hide(WindowInsets.Type.systemBars())
