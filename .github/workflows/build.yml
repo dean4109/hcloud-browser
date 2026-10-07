@@ -1,0 +1,44 @@
+name: Build hCloud Browser (Play bundle)
+
+# Actions tab -> "Build hCloud Browser (Play bundle)" -> Run workflow.
+# Needs the same four secrets as hCloud Plezy:
+#   ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.10.2"
+
+      - name: Decode keystore
+        run: echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > "$RUNNER_TEMP/upload.jks"
+
+      - name: Build app bundle
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+          KEYSTORE_PATH: ${{ runner.temp }}/upload.jks
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle :app:bundleRelease --no-daemon
+
+      - name: Remove keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/upload.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hcloud-browser-aab
+          path: app/build/outputs/bundle/release/app-release.aab

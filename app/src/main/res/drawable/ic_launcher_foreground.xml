@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Globe mark, sized for the adaptive-icon safe zone (centre 66 of 108). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3.5"
+        android:pathData="M54,30a24,24 0,1 1,0 48a24,24 0,1 1,0 -48z" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="3"
+        android:pathData="M54,30c-8,7 -11,15 -11,24s3,17 11,24M54,30c8,7 11,15 11,24s-3,17 -11,24M30,54h48M34,42h40M34,66h40" />
+</vector>
