@@ -22,10 +22,15 @@
   .edit-btn { background: none; border: 1px solid #3c4043; color: var(--accent);
     font-size: 18px; padding: 10px 22px; border-radius: 999px; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
-  .tile { position: relative; display: flex; align-items: center; justify-content: center;
-    height: 130px; border-radius: 18px; text-decoration: none; color: #fff;
-    font-size: 26px; font-weight: 700; letter-spacing: .3px; text-align: center; padding: 12px;
+  .tile { position: relative; display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 14px; height: 170px; border-radius: 18px; text-decoration: none;
+    color: var(--text); background: var(--panel); font-size: 20px; font-weight: 600;
+    letter-spacing: .2px; text-align: center; padding: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,.35); transition: transform .08s ease; }
+  .tile img { width: 88px; height: 88px; border-radius: 20px; object-fit: contain; }
+  /* No icon available: fall back to a coloured name tile. */
+  .tile.noicon { color: #fff; font-size: 26px; font-weight: 700; }
+  .tile.noicon img { display: none; }
   .tile:active { transform: scale(.97); }
   .remove { display: none; position: absolute; top: -10px; right: -10px; width: 40px; height: 40px;
     border-radius: 50%; border: 0; background: var(--danger); color: #202124;
@@ -33,7 +38,7 @@
   .editing .remove { display: block; }
   .editing .tile { animation: wiggle .25s ease-in-out infinite alternate; }
   @keyframes wiggle { from { transform: rotate(-.6deg); } to { transform: rotate(.6deg); } }
-  .add-tile { display: none; height: 130px; border-radius: 18px; border: 2px dashed #5f6368;
+  .add-tile { display: none; height: 170px; border-radius: 18px; border: 2px dashed #5f6368;
     background: none; color: var(--muted); font-size: 22px; }
   .editing .add-tile { display: block; }
   form { display: none; margin-top: 28px; background: var(--panel); border-radius: 18px;
@@ -89,6 +94,13 @@
   const PALETTE = ["#1a73e8", "#188038", "#c5221f", "#9334e6", "#e37400", "#007b83", "#b3261e", "#5f6368"];
   const KEY = "tiles.v1";
 
+  // The service's own icon, as published on its website (fetched live, not stored in the app).
+  function iconFor(url) {
+    let host = "";
+    try { host = new URL(url).hostname; } catch (e) {}
+    return "https://www.google.com/s2/favicons?sz=256&domain=" + encodeURIComponent(host);
+  }
+
   function load() {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY));
@@ -110,8 +122,20 @@
       const a = document.createElement("a");
       a.className = "tile";
       a.href = t.url;
-      a.style.background = t.color;
-      a.textContent = t.name;
+      const img = document.createElement("img");
+      img.alt = "";
+      img.src = iconFor(t.url);
+      img.addEventListener("error", () => {
+        a.classList.add("noicon");
+        a.style.background = t.color || PALETTE[i % PALETTE.length];
+      });
+      img.addEventListener("load", () => {
+        // Google returns a tiny generic globe when a site has no icon; treat that as missing.
+        if (img.naturalWidth < 32) img.dispatchEvent(new Event("error"));
+      });
+      const label = document.createElement("span");
+      label.textContent = t.name;
+      a.append(img, label);
       a.addEventListener("click", e => {
         if (document.body.classList.contains("editing")) e.preventDefault();
       });
