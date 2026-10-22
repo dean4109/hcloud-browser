@@ -23,29 +23,27 @@
   .edit-btn { background: none; border: 1px solid #3c4043; color: var(--accent);
     font-size: 18px; padding: 10px 22px; border-radius: 999px; }
 
-  /* Wide black cards with the logo filling the middle. */
+  /* Wide cards in each service's brand colour, with the logo filling the middle. */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
   .tile { position: relative; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 12px; aspect-ratio: 16 / 9; border-radius: 14px;
-    background: var(--card); border: 1px solid var(--card-edge); text-decoration: none;
+    justify-content: center; aspect-ratio: 16 / 9; border-radius: 14px;
+    background: var(--card); border: 1px solid rgba(255,255,255,.08); text-decoration: none;
     color: var(--text); overflow: visible; transition: transform .08s ease, border-color .08s ease; }
   .tile:active { transform: scale(.97); border-color: #5f6368; }
 
-  /* Logo mode: the pasted logo image, no label. */
+  /* Logo mode: the pasted logo image. */
   .tile .logo { max-width: 72%; max-height: 52%; object-fit: contain; }
-  /* Icon mode: the service's own app icon, large, with a small name. */
-  .tile .icon { width: 96px; height: 96px; border-radius: 22px; object-fit: contain; }
-  .tile .label { font-size: 19px; font-weight: 600; letter-spacing: .2px; color: #e8eaed; }
-  .tile.has-logo .label { display: none; }
-  /* Nothing loaded: coloured name card. */
-  .tile.plain { border-color: transparent; }
-  .tile.plain .label { font-size: 30px; font-weight: 700; color: #fff; }
+  /* Icon mode: the service's own app icon, large. */
+  .tile .icon { width: 128px; height: 128px; border-radius: 28px; object-fit: contain; }
+  /* The name only shows when there's no image at all. */
+  .tile .label { display: none; font-size: 32px; font-weight: 700; letter-spacing: .3px; }
+  .tile.plain .label { display: block; }
 
   .remove { display: none; position: absolute; top: -12px; right: -12px; width: 44px; height: 44px;
     border-radius: 50%; border: 0; background: var(--danger); color: #202124;
     font-size: 26px; font-weight: 700; line-height: 44px; z-index: 1; }
   .editing .remove { display: block; }
-  .editing .tile { border-style: dashed; border-color: #5f6368; }
+  .editing .tile { outline: 2px dashed rgba(255,255,255,.55); outline-offset: -8px; }
   .add-tile { display: none; aspect-ratio: 16 / 9; border-radius: 14px; border: 2px dashed #5f6368;
     background: none; color: var(--muted); font-size: 24px; }
   .editing .add-tile { display: block; }
@@ -56,6 +54,8 @@
   form h2 { flex-basis: 100%; margin: 0 0 4px; font-size: 20px; font-weight: 600; }
   form input { flex: 1 1 280px; font-size: 20px; padding: 14px 18px; border-radius: 12px;
     border: 1px solid #3c4043; background: #2b2c2f; color: var(--text); }
+  form label.color { display: flex; align-items: center; gap: 12px; font-size: 18px; color: var(--muted); }
+  form input[type=color] { flex: none; width: 64px; height: 52px; padding: 4px; }
   form .hint { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
   form button { font-size: 20px; padding: 14px 26px; border-radius: 12px; border: 0;
     background: var(--accent); color: #202124; font-weight: 600; }
@@ -82,9 +82,10 @@
     <input id="name" placeholder="Name (e.g. Crunchyroll)" required>
     <input id="url" placeholder="Web address (e.g. crunchyroll.com)" required>
     <input id="logo" placeholder="Logo image address (optional)">
+    <label class="color">Card colour <input type="color" id="color" value="#1a73e8"></label>
     <p class="hint">For the full logo look, paste the address of the service's official logo image
       (on most press or brand pages: long-press the logo → Copy image address). Leave it blank to
-      show the service's app icon instead.</p>
+      show the service's app icon instead. The card colour sits behind whichever is shown.</p>
     <button type="submit" id="save">Add</button>
     <button type="button" class="secondary" id="cancel">Cancel</button>
   </form>
@@ -96,28 +97,48 @@
 </main>
 
 <script>
+  // Card colours approximate each service's brand palette; each is adjustable in Edit.
   const DEFAULTS = [
-    { name: "YouTube",     url: "https://m.youtube.com/",         color: "#cc0000" },
-    { name: "Netflix",     url: "https://www.netflix.com/browse", color: "#b20710" },
-    { name: "Hulu",        url: "https://www.hulu.com/hub/home",  color: "#0b7a4b" },
-    { name: "Disney+",     url: "https://www.disneyplus.com/",    color: "#0e2a6b" },
-    { name: "HBO Max",     url: "https://www.hbomax.com/",        color: "#2a1a8c" },
-    { name: "Prime Video", url: "https://www.primevideo.com/",    color: "#0f6fa8" },
-    { name: "Peacock",     url: "https://www.peacocktv.com/",     color: "#3a3a3a" },
-    { name: "Paramount+",  url: "https://www.paramountplus.com/", color: "#0052cc" },
-    { name: "Apple TV",    url: "https://tv.apple.com/",          color: "#2b2b2b" },
-    { name: "Twitch",      url: "https://www.twitch.tv/",         color: "#6441a5" },
-    { name: "Plex",        url: "https://app.plex.tv/",           color: "#a8790a" }
+    { name: "YouTube",     url: "https://m.youtube.com/",         color: "#ffffff" },
+    { name: "Netflix",     url: "https://www.netflix.com/browse", color: "#000000" },
+    { name: "Hulu",        url: "https://www.hulu.com/hub/home",  color: "#1ce783" },
+    { name: "Disney+",     url: "https://www.disneyplus.com/",    color: "#113ccf" },
+    { name: "HBO Max",     url: "https://www.hbomax.com/",        color: "#0b1660" },
+    { name: "Prime Video", url: "https://www.primevideo.com/",    color: "#00a8e1" },
+    { name: "Peacock",     url: "https://www.peacocktv.com/",     color: "#000000" },
+    { name: "Paramount+",  url: "https://www.paramountplus.com/", color: "#0064ff" },
+    { name: "Apple TV",    url: "https://tv.apple.com/",          color: "#000000" },
+    { name: "Twitch",      url: "https://www.twitch.tv/",         color: "#9146ff" },
+    { name: "Plex",        url: "https://app.plex.tv/",           color: "#282a2d" }
   ];
   const PALETTE = ["#1a73e8", "#188038", "#c5221f", "#9334e6", "#e37400", "#007b83", "#b3261e", "#5f6368"];
-  const KEY = "tiles.v1";
+  const KEY = "tiles.v2";
 
   function loadTiles() {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY));
       if (Array.isArray(saved)) return saved;
+      // Carry over tiles from the previous version, updating the built-in ones to brand colours.
+      const old = JSON.parse(localStorage.getItem("tiles.v1"));
+      if (Array.isArray(old)) {
+        return old.map(t => {
+          const d = DEFAULTS.find(x => x.name === t.name);
+          return d ? { ...t, color: d.color } : t;
+        });
+      }
     } catch (e) {}
     return DEFAULTS.map(t => ({ ...t }));
+  }
+
+  // Dark or light text, whichever reads better on the card colour.
+  function textOn(hex) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(hex || "");
+    if (!m) return "#fff";
+    const n = parseInt(m[1], 16);
+    const [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255].map(v => {
+      v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? "#111" : "#fff";
   }
   function saveTiles() {
     try { localStorage.setItem(KEY, JSON.stringify(tiles)); } catch (e) {}
@@ -150,8 +171,8 @@
   function showPlain(a, t, i) {
     a.classList.remove("has-logo");
     a.classList.add("plain");
-    a.querySelector("img").remove();
-    a.style.background = t.color || PALETTE[i % PALETTE.length];
+    const img = a.querySelector("img");
+    if (img) img.remove();
   }
 
   function render() {
@@ -160,6 +181,9 @@
       const a = document.createElement("a");
       a.className = "tile";
       a.href = t.url;
+      const bg = t.color || PALETTE[i % PALETTE.length];
+      a.style.background = bg;
+      a.style.color = textOn(bg);
       a.setAttribute("aria-label", t.name);
 
       const img = document.createElement("img");
@@ -205,12 +229,14 @@
 
   function openForm(index) {
     editingIndex = index;
-    const t = index >= 0 ? tiles[index] : { name: "", url: "", logo: "" };
+    const t = index >= 0 ? tiles[index]
+      : { name: "", url: "", logo: "", color: PALETTE[tiles.length % PALETTE.length] };
     f("formTitle").textContent = index >= 0 ? "Edit " + t.name : "Add a tile";
     f("save").textContent = index >= 0 ? "Save" : "Add";
     f("name").value = t.name || "";
     f("url").value = t.url || "";
     f("logo").value = t.logo || "";
+    f("color").value = /^#[0-9a-f]{6}$/i.test(t.color || "") ? t.color : "#1a73e8";
     form.classList.add("open");
     form.scrollIntoView({ behavior: "smooth", block: "center" });
   }
@@ -229,11 +255,11 @@
     const url = f("url").value.trim();
     const logo = f("logo").value.trim();
     if (!name || !url) return;
-    const tile = { name, url: withScheme(url), logo: logo ? withScheme(logo) : "" };
+    const tile = { name, url: withScheme(url), logo: logo ? withScheme(logo) : "", color: f("color").value };
     if (editingIndex >= 0) {
       tiles[editingIndex] = { ...tiles[editingIndex], ...tile };
     } else {
-      tiles.push({ ...tile, color: PALETTE[tiles.length % PALETTE.length] });
+      tiles.push(tile);
     }
     saveTiles(); closeForm(); render();
   });
