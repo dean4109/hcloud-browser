@@ -6,10 +6,9 @@
 <title>Home</title>
 <style>
   :root {
-    --bg: #0b0b0c;
+    --bg: #2b2d31;
     --card: #000;
-    --card-edge: #2a2a2d;
-    --panel: #1c1c1f;
+    --panel: #3a3c41;
     --text: #f1f3f4;
     --muted: #9aa0a6;
     --accent: #8ab4f8;
@@ -20,19 +19,20 @@
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   main { max-width: 1500px; margin: 0 auto; padding: 28px 32px 64px; }
   header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; }
-  .edit-btn { background: none; border: 1px solid #3c4043; color: var(--accent);
+  .edit-btn { background: none; border: 1px solid #55585e; color: var(--accent);
     font-size: 18px; padding: 10px 22px; border-radius: 999px; }
 
   /* Wide cards in each service's brand colour, with the logo filling the middle. */
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
   .tile { position: relative; display: flex; flex-direction: column; align-items: center;
     justify-content: center; aspect-ratio: 16 / 9; border-radius: 14px;
-    background: var(--card); border: 1px solid rgba(255,255,255,.08); text-decoration: none;
+    background: var(--card); border: 0; text-decoration: none;
+    box-shadow: 0 6px 18px rgba(0,0,0,.35);
     color: var(--text); overflow: visible; transition: transform .08s ease, border-color .08s ease; }
-  .tile:active { transform: scale(.97); border-color: #5f6368; }
+  .tile:active { transform: scale(.97); }
 
   /* Logo mode: the pasted logo image. */
-  .tile .logo { max-width: 72%; max-height: 52%; object-fit: contain; }
+  .tile .logo { width: 66%; height: 42%; object-fit: contain; }
   /* Icon mode: the service's own app icon, large. */
   .tile .icon { width: 128px; height: 128px; border-radius: 28px; object-fit: contain; }
   /* The name only shows when there's no image at all. */
@@ -44,7 +44,7 @@
     font-size: 26px; font-weight: 700; line-height: 44px; z-index: 1; }
   .editing .remove { display: block; }
   .editing .tile { outline: 2px dashed rgba(255,255,255,.55); outline-offset: -8px; }
-  .add-tile { display: none; aspect-ratio: 16 / 9; border-radius: 14px; border: 2px dashed #5f6368;
+  .add-tile { display: none; aspect-ratio: 16 / 9; border-radius: 14px; border: 2px dashed #6b6f76;
     background: none; color: var(--muted); font-size: 24px; }
   .editing .add-tile { display: block; }
 
@@ -53,17 +53,16 @@
   form.open { display: flex; }
   form h2 { flex-basis: 100%; margin: 0 0 4px; font-size: 20px; font-weight: 600; }
   form input { flex: 1 1 280px; font-size: 20px; padding: 14px 18px; border-radius: 12px;
-    border: 1px solid #3c4043; background: #2b2c2f; color: var(--text); }
+    border: 1px solid #55585e; background: #232428; color: var(--text); }
   form label.color { display: flex; align-items: center; gap: 12px; font-size: 18px; color: var(--muted); }
   form input[type=color] { flex: none; width: 64px; height: 52px; padding: 4px; }
   form .hint { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
   form button { font-size: 20px; padding: 14px 26px; border-radius: 12px; border: 0;
     background: var(--accent); color: #202124; font-weight: 600; }
-  form button.secondary { background: #3c4043; color: var(--text); }
+  form button.secondary { background: #55585e; color: var(--text); }
   .reset { display: none; margin-top: 28px; background: none; border: 0;
     color: var(--muted); font-size: 16px; text-decoration: underline; }
   body.editing .reset { display: inline-block; }
-  .note { margin-top: 36px; color: var(--muted); font-size: 15px; line-height: 1.5; }
   .editing-tip { display: none; color: var(--muted); font-size: 16px; margin: 0 auto 0 0; }
   body.editing .editing-tip { display: block; }
 </style>
@@ -91,40 +90,49 @@
   </form>
 
   <button class="reset" id="reset">Restore default tiles</button>
-
-  <p class="note">Streaming video only plays while parked. Some services may refuse to play in a
-    browser; if one does, there’s nothing wrong with the car or the app.</p>
 </main>
 
 <script>
-  // Card colours approximate each service's brand palette; each is adjustable in Edit.
+  // Built-in tiles: Harrison's chosen card colours and official logos (loaded live from Brandfetch).
+  const BF = "?c=1dxbfHSJFAPEGdCLU4o5B";
   const DEFAULTS = [
-    { name: "YouTube",     url: "https://m.youtube.com/",         color: "#ffffff" },
-    { name: "Netflix",     url: "https://www.netflix.com/browse", color: "#000000" },
-    { name: "Hulu",        url: "https://www.hulu.com/hub/home",  color: "#1ce783" },
-    { name: "Disney+",     url: "https://www.disneyplus.com/",    color: "#113ccf" },
-    { name: "HBO Max",     url: "https://www.hbomax.com/",        color: "#0b1660" },
-    { name: "Prime Video", url: "https://www.primevideo.com/",    color: "#00a8e1" },
-    { name: "Peacock",     url: "https://www.peacocktv.com/",     color: "#000000" },
-    { name: "Paramount+",  url: "https://www.paramountplus.com/", color: "#0064ff" },
-    { name: "Apple TV",    url: "https://tv.apple.com/",          color: "#000000" },
-    { name: "Twitch",      url: "https://www.twitch.tv/",         color: "#9146ff" },
-    { name: "Plex",        url: "https://app.plex.tv/",           color: "#282a2d" }
+    { name: "YouTube",     url: "https://m.youtube.com/",         color: "#000000",
+      logo: "https://cdn.brandfetch.io/idVfYwcuQz/theme/dark/logo.svg" + BF },
+    { name: "Netflix",     url: "https://www.netflix.com/browse", color: "#000000",
+      logo: "https://cdn.brandfetch.io/ideQwN5lBE/theme/dark/logo.svg" + BF },
+    { name: "Hulu",        url: "https://www.hulu.com/hub/home",  color: "#000000",
+      logo: "https://cdn.brandfetch.io/id4KRloCCr/theme/dark/logo.svg" + BF },
+    { name: "Disney+",     url: "https://www.disneyplus.com/",    color: "#113ccf",
+      logo: "https://cdn.brandfetch.io/idhQlYRiX2/theme/light/logo.svg" + BF },
+    { name: "HBO Max",     url: "https://www.hbomax.com/",        color: "#0b1660",
+      logo: "https://cdn.brandfetch.io/idKKo6p4ks/theme/light/logo.svg" + BF },
+    { name: "Plex",        url: "https://app.plex.tv/",           color: "#1a1b1e",
+      logo: "https://cdn.brandfetch.io/id6OgdnqKb/theme/light/logo.svg" + BF },
+    { name: "Prime Video", url: "https://www.primevideo.com/",    color: "#00a8e1",
+      logo: "https://cdn.brandfetch.io/idXRXV6qi8/w/320/h/60/theme/light/logo.png" + BF },
+    { name: "Peacock",     url: "https://www.peacocktv.com/",     color: "#000000",
+      logo: "https://cdn.brandfetch.io/idIaTUzyS6/theme/light/logo.svg" + BF },
+    { name: "Paramount+",  url: "https://www.paramountplus.com/", color: "#0064ff",
+      logo: "https://cdn.brandfetch.io/idU9biO3N_/theme/light/logo.svg" + BF },
+    { name: "Apple TV",    url: "https://tv.apple.com/",          color: "#000000",
+      logo: "https://cdn.brandfetch.io/idnrCPuv87/theme/light/logo.svg" + BF },
+    { name: "Twitch",      url: "https://www.twitch.tv/",         color: "#000000",
+      logo: "https://cdn.brandfetch.io/idIwZCwD2f/theme/dark/logo.svg" + BF }
   ];
   const PALETTE = ["#1a73e8", "#188038", "#c5221f", "#9334e6", "#e37400", "#007b83", "#b3261e", "#5f6368"];
-  const KEY = "tiles.v2";
+  const KEY = "tiles.v3";
 
   function loadTiles() {
     try {
       const saved = JSON.parse(localStorage.getItem(KEY));
       if (Array.isArray(saved)) return saved;
-      // Carry over tiles from the previous version, updating the built-in ones to brand colours.
-      const old = JSON.parse(localStorage.getItem("tiles.v1"));
-      if (Array.isArray(old)) {
-        return old.map(t => {
-          const d = DEFAULTS.find(x => x.name === t.name);
-          return d ? { ...t, color: d.color } : t;
-        });
+      // First run of this version: fresh built-ins, plus any tiles added in an earlier version.
+      for (const oldKey of ["tiles.v2", "tiles.v1"]) {
+        const old = JSON.parse(localStorage.getItem(oldKey));
+        if (Array.isArray(old)) {
+          const mine = old.filter(t => !DEFAULTS.some(d => d.name === t.name));
+          return DEFAULTS.map(t => ({ ...t })).concat(mine);
+        }
       }
     } catch (e) {}
     return DEFAULTS.map(t => ({ ...t }));
