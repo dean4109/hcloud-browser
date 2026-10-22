@@ -6,8 +6,10 @@
 <title>Home</title>
 <style>
   :root {
-    --bg: #121316;
-    --panel: #202124;
+    --bg: #0b0b0c;
+    --card: #000;
+    --card-edge: #2a2a2d;
+    --panel: #1c1c1f;
     --text: #f1f3f4;
     --muted: #9aa0a6;
     --accent: #8ab4f8;
@@ -16,58 +18,74 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--text);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-  main { max-width: 1400px; margin: 0 auto; padding: 32px 32px 64px; }
-  header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 24px; }
-  h1 { font-size: 28px; font-weight: 600; margin: 0; letter-spacing: .2px; }
+  main { max-width: 1500px; margin: 0 auto; padding: 28px 32px 64px; }
+  header { display: flex; align-items: center; justify-content: flex-end; margin-bottom: 20px; }
   .edit-btn { background: none; border: 1px solid #3c4043; color: var(--accent);
     font-size: 18px; padding: 10px 22px; border-radius: 999px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
+
+  /* Wide black cards with the logo filling the middle. */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
   .tile { position: relative; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 14px; height: 170px; border-radius: 18px; text-decoration: none;
-    color: var(--text); background: var(--panel); font-size: 20px; font-weight: 600;
-    letter-spacing: .2px; text-align: center; padding: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.35); transition: transform .08s ease; }
-  .tile img { width: 88px; height: 88px; border-radius: 20px; object-fit: contain; }
-  /* No icon available: fall back to a coloured name tile. */
-  .tile.noicon { color: #fff; font-size: 26px; font-weight: 700; }
-  .tile.noicon img { display: none; }
-  .tile:active { transform: scale(.97); }
-  .remove { display: none; position: absolute; top: -10px; right: -10px; width: 40px; height: 40px;
+    justify-content: center; gap: 12px; aspect-ratio: 16 / 9; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--card-edge); text-decoration: none;
+    color: var(--text); overflow: visible; transition: transform .08s ease, border-color .08s ease; }
+  .tile:active { transform: scale(.97); border-color: #5f6368; }
+
+  /* Logo mode: the pasted logo image, no label. */
+  .tile .logo { max-width: 72%; max-height: 52%; object-fit: contain; }
+  /* Icon mode: the service's own app icon, large, with a small name. */
+  .tile .icon { width: 96px; height: 96px; border-radius: 22px; object-fit: contain; }
+  .tile .label { font-size: 19px; font-weight: 600; letter-spacing: .2px; color: #e8eaed; }
+  .tile.has-logo .label { display: none; }
+  /* Nothing loaded: coloured name card. */
+  .tile.plain { border-color: transparent; }
+  .tile.plain .label { font-size: 30px; font-weight: 700; color: #fff; }
+
+  .remove { display: none; position: absolute; top: -12px; right: -12px; width: 44px; height: 44px;
     border-radius: 50%; border: 0; background: var(--danger); color: #202124;
-    font-size: 24px; font-weight: 700; line-height: 40px; }
+    font-size: 26px; font-weight: 700; line-height: 44px; z-index: 1; }
   .editing .remove { display: block; }
-  .editing .tile { animation: wiggle .25s ease-in-out infinite alternate; }
-  @keyframes wiggle { from { transform: rotate(-.6deg); } to { transform: rotate(.6deg); } }
-  .add-tile { display: none; height: 170px; border-radius: 18px; border: 2px dashed #5f6368;
-    background: none; color: var(--muted); font-size: 22px; }
+  .editing .tile { border-style: dashed; border-color: #5f6368; }
+  .add-tile { display: none; aspect-ratio: 16 / 9; border-radius: 14px; border: 2px dashed #5f6368;
+    background: none; color: var(--muted); font-size: 24px; }
   .editing .add-tile { display: block; }
+
   form { display: none; margin-top: 28px; background: var(--panel); border-radius: 18px;
     padding: 24px; gap: 14px; flex-wrap: wrap; align-items: center; }
   form.open { display: flex; }
-  form input { flex: 1 1 260px; font-size: 20px; padding: 14px 18px; border-radius: 12px;
+  form h2 { flex-basis: 100%; margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  form input { flex: 1 1 280px; font-size: 20px; padding: 14px 18px; border-radius: 12px;
     border: 1px solid #3c4043; background: #2b2c2f; color: var(--text); }
+  form .hint { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 15px; line-height: 1.45; }
   form button { font-size: 20px; padding: 14px 26px; border-radius: 12px; border: 0;
     background: var(--accent); color: #202124; font-weight: 600; }
   form button.secondary { background: #3c4043; color: var(--text); }
   .reset { display: none; margin-top: 28px; background: none; border: 0;
     color: var(--muted); font-size: 16px; text-decoration: underline; }
   body.editing .reset { display: inline-block; }
-  .note { margin-top: 40px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .note { margin-top: 36px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+  .editing-tip { display: none; color: var(--muted); font-size: 16px; margin: 0 auto 0 0; }
+  body.editing .editing-tip { display: block; }
 </style>
 </head>
 <body>
 <main>
   <header>
-    <h1>Watch</h1>
+    <p class="editing-tip">Tap a tile to change it, or × to remove it.</p>
     <button class="edit-btn" id="edit">Edit</button>
   </header>
 
   <div class="grid" id="grid"></div>
 
-  <form id="addForm" autocomplete="off">
+  <form id="tileForm" autocomplete="off">
+    <h2 id="formTitle">Add a tile</h2>
     <input id="name" placeholder="Name (e.g. Crunchyroll)" required>
     <input id="url" placeholder="Web address (e.g. crunchyroll.com)" required>
-    <button type="submit">Add</button>
+    <input id="logo" placeholder="Logo image address (optional)">
+    <p class="hint">For the full logo look, paste the address of the service's official logo image
+      (on most press or brand pages: long-press the logo → Copy image address). Leave it blank to
+      show the service's app icon instead.</p>
+    <button type="submit" id="save">Add</button>
     <button type="button" class="secondary" id="cancel">Cancel</button>
   </form>
 
@@ -94,27 +112,47 @@
   const PALETTE = ["#1a73e8", "#188038", "#c5221f", "#9334e6", "#e37400", "#007b83", "#b3261e", "#5f6368"];
   const KEY = "tiles.v1";
 
-  // The service's own icon, as published on its website (fetched live, not stored in the app).
+  function loadTiles() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(KEY));
+      if (Array.isArray(saved)) return saved;
+    } catch (e) {}
+    return DEFAULTS.map(t => ({ ...t }));
+  }
+  function saveTiles() {
+    try { localStorage.setItem(KEY, JSON.stringify(tiles)); } catch (e) {}
+  }
+  function withScheme(u) { return /^https?:\/\//i.test(u) ? u : "https://" + u; }
+
+  // The service's own icon as published on its website (fetched live, not stored in the app).
   function iconFor(url) {
     let host = "";
     try { host = new URL(url).hostname; } catch (e) {}
     return "https://www.google.com/s2/favicons?sz=256&domain=" + encodeURIComponent(host);
   }
 
-  function load() {
-    try {
-      const saved = JSON.parse(localStorage.getItem(KEY));
-      if (Array.isArray(saved)) return saved;
-    } catch (e) {}
-    return DEFAULTS.slice();
-  }
-  function save(list) {
-    try { localStorage.setItem(KEY, JSON.stringify(list)); } catch (e) {}
-  }
-
-  let tiles = load();
+  let tiles = loadTiles();
+  let editingIndex = -1;
   const grid = document.getElementById("grid");
-  const form = document.getElementById("addForm");
+  const form = document.getElementById("tileForm");
+  const f = id => document.getElementById(id);
+
+  // Logo → app icon → coloured name, falling back a step whenever an image fails to load.
+  function showIcon(a, t, i) {
+    a.classList.remove("has-logo");
+    const img = a.querySelector("img");
+    img.className = "icon";
+    img.onerror = () => showPlain(a, t, i);
+    // Google returns a tiny generic globe when a site has no icon; treat that as missing.
+    img.onload = () => { if (img.naturalWidth < 32) showPlain(a, t, i); };
+    img.src = iconFor(t.url);
+  }
+  function showPlain(a, t, i) {
+    a.classList.remove("has-logo");
+    a.classList.add("plain");
+    a.querySelector("img").remove();
+    a.style.background = t.color || PALETTE[i % PALETTE.length];
+  }
 
   function render() {
     grid.textContent = "";
@@ -122,67 +160,86 @@
       const a = document.createElement("a");
       a.className = "tile";
       a.href = t.url;
+      a.setAttribute("aria-label", t.name);
+
       const img = document.createElement("img");
       img.alt = "";
-      img.src = iconFor(t.url);
-      img.addEventListener("error", () => {
-        a.classList.add("noicon");
-        a.style.background = t.color || PALETTE[i % PALETTE.length];
-      });
-      img.addEventListener("load", () => {
-        // Google returns a tiny generic globe when a site has no icon; treat that as missing.
-        if (img.naturalWidth < 32) img.dispatchEvent(new Event("error"));
-      });
       const label = document.createElement("span");
+      label.className = "label";
       label.textContent = t.name;
       a.append(img, label);
+
+      if (t.logo) {
+        a.classList.add("has-logo");
+        img.className = "logo";
+        img.onerror = () => showIcon(a, t, i);
+        img.src = t.logo;
+      } else {
+        showIcon(a, t, i);
+      }
+
       a.addEventListener("click", e => {
-        if (document.body.classList.contains("editing")) e.preventDefault();
+        if (!document.body.classList.contains("editing")) return;
+        e.preventDefault();
+        openForm(i);
       });
+
       const x = document.createElement("button");
       x.className = "remove";
       x.setAttribute("aria-label", "Remove " + t.name);
       x.textContent = "×";
       x.addEventListener("click", e => {
         e.preventDefault(); e.stopPropagation();
-        tiles.splice(i, 1); save(tiles); render();
+        tiles.splice(i, 1); saveTiles(); closeForm(); render();
       });
       a.appendChild(x);
       grid.appendChild(a);
     });
+
     const add = document.createElement("button");
     add.className = "add-tile";
     add.textContent = "+ Add";
-    add.addEventListener("click", () => {
-      form.classList.add("open");
-      document.getElementById("name").focus();
-    });
+    add.addEventListener("click", () => openForm(-1));
     grid.appendChild(add);
   }
 
-  document.getElementById("edit").addEventListener("click", e => {
+  function openForm(index) {
+    editingIndex = index;
+    const t = index >= 0 ? tiles[index] : { name: "", url: "", logo: "" };
+    f("formTitle").textContent = index >= 0 ? "Edit " + t.name : "Add a tile";
+    f("save").textContent = index >= 0 ? "Save" : "Add";
+    f("name").value = t.name || "";
+    f("url").value = t.url || "";
+    f("logo").value = t.logo || "";
+    form.classList.add("open");
+    form.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function closeForm() { form.classList.remove("open"); form.reset(); editingIndex = -1; }
+
+  f("edit").addEventListener("click", e => {
     const on = document.body.classList.toggle("editing");
     e.target.textContent = on ? "Done" : "Edit";
-    if (!on) form.classList.remove("open");
+    if (!on) closeForm();
   });
-
-  document.getElementById("cancel").addEventListener("click", () => {
-    form.classList.remove("open"); form.reset();
-  });
+  f("cancel").addEventListener("click", closeForm);
 
   form.addEventListener("submit", e => {
     e.preventDefault();
-    const name = document.getElementById("name").value.trim();
-    let url = document.getElementById("url").value.trim();
+    const name = f("name").value.trim();
+    const url = f("url").value.trim();
+    const logo = f("logo").value.trim();
     if (!name || !url) return;
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-    tiles.push({ name, url, color: PALETTE[tiles.length % PALETTE.length] });
-    save(tiles); render();
-    form.reset(); form.classList.remove("open");
+    const tile = { name, url: withScheme(url), logo: logo ? withScheme(logo) : "" };
+    if (editingIndex >= 0) {
+      tiles[editingIndex] = { ...tiles[editingIndex], ...tile };
+    } else {
+      tiles.push({ ...tile, color: PALETTE[tiles.length % PALETTE.length] });
+    }
+    saveTiles(); closeForm(); render();
   });
 
-  document.getElementById("reset").addEventListener("click", () => {
-    tiles = DEFAULTS.slice(); save(tiles); render();
+  f("reset").addEventListener("click", () => {
+    tiles = DEFAULTS.map(t => ({ ...t })); saveTiles(); closeForm(); render();
   });
 
   render();
